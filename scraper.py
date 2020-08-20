@@ -8,7 +8,7 @@ import smtplib
 import tkinter as tk
 
 root = tk.Tk()
-def hledej(mesto, hledej):
+def hledej(mesto, hledej,email):
 	
 	close_window()
 
@@ -66,7 +66,7 @@ def hledej(mesto, hledej):
 
 			msg = f"Subject: {subject}\n\n{body}"
 
-			server.sendmail("novyinzeratnabazosi@gmail.com", "jindrichtomas@post.cz", msg)
+			server.sendmail("novyinzeratnabazosi@gmail.com", email, msg)
 			#print("mail odeslan")
 			server.quit()
 			print(driver.current_url)
@@ -78,7 +78,7 @@ def hledej(mesto, hledej):
 
 def okno():
 
-	root.geometry("320x75")
+	root.geometry("320x120")
 	root.resizable(False,False)
 	L1 = tk.Label(root, text="Zadejte lokalitu: ")
 	L1.place(x = 1, y = 1)
@@ -88,7 +88,11 @@ def okno():
 	E1.place(x = 100, y = 1)
 	E2 = tk.Entry(root, bd=5)
 	E2.place(x = 100, y =45)
-	Button=tk.Button(root,text = "HLEDEJ",height = 4, width = 11,state = "normal",command = lambda:hledej(E1.get(),E2.get()))
+	L3 = tk.Label(root, text="Zadejte email: ")
+	L3.place(x = 1, y = 90)
+	E3 = tk.Entry(root, bd=5)
+	E3.place(x = 100, y =90)
+	Button=tk.Button(root,text = "HLEDEJ",height = 7, width = 11,state = "normal",command = lambda:hledej(E1.get(),E2.get(),E3.get()))
 	Button.place(x = 230, y = 1)
 
 	root.mainloop()		
