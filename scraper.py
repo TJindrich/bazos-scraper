@@ -1,85 +1,111 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support import expected_conditions as EC
 import time
 import numpy as np
-from datetime import date
+import datetime
 import smtplib
 import tkinter as tk
 
 root = tk.Tk()
-def hledej(mesto, hledej,email):
+
+PATH = "C:\Program Files (x86)\chromedriver.exe"
+options = webdriver.ChromeOptions()
+#options.add_argument("headless")
+
+
+def sendMail(prijemce,odkazy):
+	server = smtplib.SMTP("smtp.gmail.com",587)
+	server.ehlo()
+	server.starttls()
+	server.ehlo()
+	server.login("novyinzeratnabazosi@gmail.com", "hlkqqhxzimvmchep")
+	subject = "Novy inzerat na bazosi!"
+	body = "Dnesni nabidky na vami specifikovany produkt: " + odkazy
+	msg = f"Subject: {subject}\n\n{body}"
+	server.sendmail("novyinzeratnabazosi@gmail.com", prijemce, msg)
+	#print("mail odeslan")
+	server.quit()
+	#print("end")
+
+def hledej(mesto, hledej, email):
 	
 	close_window()
-
-	PATH = "C:\Program Files (x86)\chromedriver.exe"
-	options = webdriver.ChromeOptions()
-	#options.add_argument("headless")
 	driver = webdriver.Chrome(PATH, options=options)
+	
+	
+	try:
+		driver.get("https://www.bazos.cz")
+		lokalita = driver.find_element_by_name("hlokalita")
+	except Exception :
+		print("Web nebo prvek nenalezen!\n")
 
-	driver.get("https://www.bazos.cz")
-
-	lokalita = driver.find_element_by_name("hlokalita")
 	lokalita.send_keys(mesto)
 	search = driver.find_element_by_name("hledat")
 	search.send_keys(hledej)
 	search.send_keys(Keys.RETURN)
 
-	time.sleep(1)
+	time.sleep(0.15)
 
 	datums = driver.find_elements_by_class_name("velikost10")
 	nazvy = driver.find_elements_by_class_name("nadpis")
 
 	arr = np.array(datums)
 	arrr = np.array(nazvy)
+	odkazy =[]
+	arrDatumy = []
 
-	i = len(arr)
-	while i > 0:
-  		print(i)
-  		i -= 1
-  		print(arr[i].text + "   " + arrr[i].text)
+	#i = len(arr)
+	#while i > 0:
+  	#	print(i)
+  	#	i -= 1
+  	#	print(arr[i].text + "   " + arrr[i].text)
 
-	today = str(date.today())
-	dnes = today[8:11]
 	char1 = '['
-	char2 = '.'
-	for y in range(20):
+	char2 = ']'
+	for y in range(len(arr)):
+
 		mystr = arr[y].text
 		finstr = (mystr[mystr.find(char1)+1 : mystr.find(char2)])
-		link = driver.find_element_by_link_text(arrr[y].text)
+		arrDatumy.append(finstr)
+	#	print(finstr)
 
-		if finstr == dnes:
+	x= datetime.datetime.now()
+	den = str(x.day)
+	mesic = str(x.month)
+	rok = str(x.year)
+
+	datum = den+ "."+mesic+ ". "+rok
+	#print(datum)
+	i = 0
+	for x in arrDatumy :
+
+		link = driver.find_element_by_link_text(arrr[i].text)
+		i=i+1
+
+		if x == datum :
+		
 			link.send_keys(Keys.CONTROL + Keys.RETURN)
-			print("click")
-			driver.switch_to.window(driver.window_handles[1]),time.sleep(2)
+	#		print("click")
+			driver.switch_to.window(driver.window_handles[1]),time.sleep(0.15)
 
-			server = smtplib.SMTP("smtp.gmail.com",587)
-			server.ehlo()
-			server.starttls()
-			server.ehlo()
+			
+			odkazy.append(driver.current_url)
 
-			server.login("novyinzeratnabazosi@gmail.com", "hlkqqhxzimvmchep")
-
-			subject = "Novy inzerat na bazosi!"
-
-			body = "Pro zobrazeni kliknete na nasledujici odkaz: " + driver.current_url
-
-			msg = f"Subject: {subject}\n\n{body}"
-
-			server.sendmail("novyinzeratnabazosi@gmail.com", email, msg)
-			#print("mail odeslan")
-			server.quit()
-			print(driver.current_url)
+	#		print(driver.current_url)
 		
 			driver.close()
-			driver.switch_to.window(driver.window_handles[0]),time.sleep(2)
+			driver.switch_to.window(driver.window_handles[0]),time.sleep(0.15)
 
+	#print(odkazy)
 	driver.close()
-
+	sendMail(email,str(odkazy))
+	
+		
 def okno():
 
 	root.geometry("320x120")
 	root.resizable(False,False)
+
 	L1 = tk.Label(root, text="Zadejte lokalitu: ")
 	L1.place(x = 1, y = 1)
 	L2 = tk.Label(root, text="Zadejte produkt: ")
@@ -96,9 +122,10 @@ def okno():
 	Button.place(x = 230, y = 1)
 
 	root.mainloop()		
-	#hledej(lokalita, item)
 
 def close_window():
 	root.destroy()
 
 okno()
+
+
